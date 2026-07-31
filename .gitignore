@@ -36,3 +36,5 @@ data/
 
 # Coverage
 coverage/
+
+backend/.env.example
