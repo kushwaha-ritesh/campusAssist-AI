@@ -5,9 +5,13 @@ from app.auth import get_current_active_user, require_admin
 from app.config import get_settings
 from datetime import datetime
 from bson import ObjectId
+import uuid
 
 router = APIRouter(prefix="/api/appointments", tags=["Appointments"])
 settings = get_settings()
+
+# In-memory store for bypass/no-auth mode
+_bypass_appointments: dict[str, dict] = {}
 
 
 def _serialize(doc: dict) -> dict:
@@ -21,10 +25,17 @@ async def book_appointment(
     current_user: dict = Depends(get_current_active_user),
 ):
     if settings.dev_bypass:
-        raise HTTPException(
-            status_code=503,
-            detail="Appointments require MongoDB. Install MongoDB or connect Atlas to use this feature.",
-        )
+        aid = str(uuid.uuid4())
+        doc = {
+            **payload.model_dump(),
+            "id": aid,
+            "student_id": current_user["student_id"],
+            "student_name": current_user["full_name"],
+            "status": "pending",
+            "created_at": datetime.utcnow(),
+        }
+        _bypass_appointments[aid] = doc
+        return doc
     db = get_db()
     doc = {
         **payload.model_dump(),
@@ -41,7 +52,10 @@ async def book_appointment(
 @router.get("/")
 async def list_appointments(current_user: dict = Depends(get_current_active_user)):
     if settings.dev_bypass:
-        return []
+        items = list(_bypass_appointments.values())
+        if current_user["role"] != "admin":
+            items = [a for a in items if a["student_id"] == current_user["student_id"]]
+        return items
     db = get_db()
     query = (
         {}
@@ -59,7 +73,13 @@ async def update_appointment_status(
     current_user: dict = Depends(require_admin),
 ):
     if settings.dev_bypass:
-        raise HTTPException(status_code=503, detail="Requires MongoDB.")
+        doc = _bypass_appointments.get(appt_id)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        if status not in ("pending", "confirmed", "cancelled"):
+            raise HTTPException(status_code=400, detail="Invalid status value")
+        doc["status"] = status
+        return doc
     db = get_db()
     if not ObjectId.is_valid(appt_id):
         raise HTTPException(status_code=400, detail="Invalid appointment ID")
@@ -81,6 +101,7 @@ async def cancel_appointment(
     current_user: dict = Depends(get_current_active_user),
 ):
     if settings.dev_bypass:
+        _bypass_appointments.pop(appt_id, None)
         return
     db = get_db()
     if not ObjectId.is_valid(appt_id):

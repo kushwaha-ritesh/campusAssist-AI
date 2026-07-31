@@ -1,4 +1,9 @@
+from functools import lru_cache
+from pathlib import Path
 from pydantic_settings import BaseSettings
+
+# Resolve .env relative to this file so it works regardless of cwd
+_ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -12,8 +17,9 @@ class Settings(BaseSettings):
     dev_bypass: bool = False
 
     class Config:
-        env_file = ".env"
+        env_file = str(_ENV_FILE)
 
 
+@lru_cache
 def get_settings() -> Settings:
     return Settings()

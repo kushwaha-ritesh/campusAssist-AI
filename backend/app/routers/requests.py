@@ -6,9 +6,13 @@ from app.auth import get_current_active_user, require_admin
 from app.config import get_settings
 from datetime import datetime
 from bson import ObjectId
+import uuid
 
 router = APIRouter(prefix="/api/requests", tags=["Requests"])
 settings = get_settings()
+
+# In-memory store for bypass/no-auth mode
+_bypass_requests: dict[str, dict] = {}
 
 
 def _serialize(doc: dict) -> dict:
@@ -22,10 +26,20 @@ async def create_request(
     current_user: dict = Depends(get_current_active_user),
 ):
     if settings.dev_bypass:
-        raise HTTPException(
-            status_code=503,
-            detail="Raising requests requires MongoDB. Install MongoDB or connect Atlas to use this feature.",
-        )
+        now = datetime.utcnow()
+        rid = str(uuid.uuid4())
+        doc = {
+            **payload.model_dump(),
+            "id": rid,
+            "student_id": current_user["student_id"],
+            "student_name": current_user["full_name"],
+            "status": "open",
+            "admin_note": None,
+            "created_at": now,
+            "updated_at": now,
+        }
+        _bypass_requests[rid] = doc
+        return doc
     db = get_db()
     now = datetime.utcnow()
     doc = {
@@ -48,7 +62,12 @@ async def list_requests(
     current_user: dict = Depends(get_current_active_user),
 ):
     if settings.dev_bypass:
-        return []
+        items = list(_bypass_requests.values())
+        if status:
+            items = [r for r in items if r["status"] == status]
+        if current_user["role"] == "student":
+            items = [r for r in items if r["student_id"] == current_user["student_id"]]
+        return items
     db = get_db()
     query: dict = {}
     if current_user["role"] == "student":
@@ -65,7 +84,10 @@ async def get_request(
     current_user: dict = Depends(get_current_active_user),
 ):
     if settings.dev_bypass:
-        raise HTTPException(status_code=404, detail="No requests in bypass mode.")
+        doc = _bypass_requests.get(request_id)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Request not found")
+        return doc
     db = get_db()
     if not ObjectId.is_valid(request_id):
         raise HTTPException(status_code=400, detail="Invalid request ID")
@@ -84,7 +106,13 @@ async def update_request(
     current_user: dict = Depends(require_admin),
 ):
     if settings.dev_bypass:
-        raise HTTPException(status_code=503, detail="Requires MongoDB.")
+        doc = _bypass_requests.get(request_id)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Request not found")
+        update_data = {k: v for k, v in payload.model_dump().items() if v is not None}
+        doc.update(update_data)
+        doc["updated_at"] = datetime.utcnow()
+        return doc
     db = get_db()
     if not ObjectId.is_valid(request_id):
         raise HTTPException(status_code=400, detail="Invalid request ID")
@@ -103,6 +131,7 @@ async def update_request(
 @router.delete("/{request_id}", status_code=204)
 async def delete_request(request_id: str, current_user: dict = Depends(require_admin)):
     if settings.dev_bypass:
+        _bypass_requests.pop(request_id, None)
         return
     db = get_db()
     if not ObjectId.is_valid(request_id):
