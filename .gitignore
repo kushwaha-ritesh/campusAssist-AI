@@ -38,3 +38,6 @@ data/
 coverage/
 
 backend/.env.example
+
+# Local documentation — not for version control
+DOCUMENTATION.md
