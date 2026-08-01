@@ -4,6 +4,9 @@ from contextlib import asynccontextmanager
 
 from app.database import connect_db, close_db
 from app.routers import auth, requests, appointments, notifications, ai_chat, admin, campus_info
+from app.config import get_settings
+
+settings = get_settings()
 
 
 @asynccontextmanager
@@ -26,9 +29,10 @@ app = FastAPI(
 )
 
 # ─── CORS ────────────────────────────────────────────────────────────────────
+_origins = [o.strip() for o in settings.allowed_origins.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

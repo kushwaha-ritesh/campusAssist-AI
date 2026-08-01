@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     admin_registration_code: str = "ADMIN2024"
     # Set to "true" to enable hardcoded bypass credentials (no MongoDB needed)
     dev_bypass: bool = False
+    # Comma-separated allowed CORS origins
+    # e.g. ALLOWED_ORIGINS=https://your-app.vercel.app,http://localhost:3000
+    allowed_origins: str = "http://localhost:3000,http://localhost:5173"
 
     class Config:
         env_file = str(_ENV_FILE)
