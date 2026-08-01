@@ -4,9 +4,21 @@ from app.models.models import UserCreate, UserResponse, Token
 from app.auth import hash_password, verify_password, create_access_token, get_current_active_user
 from app.config import get_settings
 from datetime import timedelta, datetime
+import random
+import string
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 settings = get_settings()
+
+
+async def _generate_id(db, prefix: str) -> str:
+    """Generate a unique sequential ID like STU2024001 or ADM2024001."""
+    year = datetime.utcnow().year
+    while True:
+        suffix = ''.join(random.choices(string.digits, k=4))
+        candidate = f"{prefix}{year}{suffix}"
+        if not await db.users.find_one({"student_id": candidate}):
+            return candidate
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
@@ -29,12 +41,16 @@ async def register(user: UserCreate):
         if user.admin_code != settings.admin_registration_code:
             raise HTTPException(status_code=400, detail="Invalid admin registration code")
 
-    existing = await db.users.find_one({"$or": [{"student_id": user.student_id}, {"email": user.email}]})
+    existing = await db.users.find_one({"email": user.email})
     if existing:
-        raise HTTPException(status_code=400, detail="Student ID or email already registered")
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Auto-generate a unique ID
+    prefix = "ADM" if user.role == "admin" else "STU"
+    generated_id = await _generate_id(db, prefix)
 
     user_doc = {
-        "student_id": user.student_id,
+        "student_id": generated_id,
         "full_name": user.full_name,
         "email": user.email,
         "department": user.department,
@@ -90,11 +106,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
     from app.database import get_db
     db = get_db()
-    user = await db.users.find_one({"student_id": form_data.username})
+    user = await db.users.find_one(
+        {"$or": [{"student_id": form_data.username}, {"email": form_data.username}]}
+    )
     if not user or not verify_password(form_data.password, user["hashed_password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid student ID or password",
+            detail="Invalid student ID / email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if not user.get("is_active", True):

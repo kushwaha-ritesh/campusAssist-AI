@@ -9,24 +9,11 @@ interface AuthStore {
   isAuthenticated: () => boolean;
 }
 
-// ── Demo bypass user — used when no real session exists ──────────────────────
-const DEMO_USER: User = {
-  id: 'bypass-student-001',
-  student_id: 'STU001',
-  full_name: 'Demo Student',
-  email: 'student@demo.edu',
-  department: 'Computer Science',
-  role: 'student',
-  is_active: true,
-};
-const DEMO_TOKEN = 'bypass';
-// ─────────────────────────────────────────────────────────────────────────────
-
-// Rehydrate from localStorage, fall back to demo user
-const storedToken = localStorage.getItem('ca_token') ?? DEMO_TOKEN;
-const storedUser: User = localStorage.getItem('ca_user')
+// Rehydrate from localStorage
+const storedToken = localStorage.getItem('ca_token');
+const storedUser: User | null = localStorage.getItem('ca_user')
   ? JSON.parse(localStorage.getItem('ca_user')!)
-  : DEMO_USER;
+  : null;
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: storedUser,
@@ -41,8 +28,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   clearAuth: () => {
     localStorage.removeItem('ca_token');
     localStorage.removeItem('ca_user');
-    // Reset to demo user instead of null — keeps the app accessible
-    set({ user: DEMO_USER, token: DEMO_TOKEN });
+    set({ user: null, token: null });
   },
 
   isAuthenticated: () => !!get().token && !!get().user,

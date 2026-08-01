@@ -8,8 +8,7 @@ from app.config import get_settings
 
 settings = get_settings()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-# auto_error=False → missing/invalid token returns None instead of 401
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
@@ -29,12 +28,12 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
 
-async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)):
-    from app.bypass import bypass_get_user, BYPASS_USERS
-
-    # ── No token at all → return default bypass student (no auth required) ───
-    if token is None:
-        return list(BYPASS_USERS.values())[0]
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
     # ── Try to decode the token ───────────────────────────────────────────────
     try:
@@ -44,14 +43,17 @@ async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)):
         student_id: str = payload.get("sub")
         role: str = payload.get("role")
         if student_id is None:
-            return list(BYPASS_USERS.values())[0]
+            raise credentials_exception
     except JWTError:
-        return list(BYPASS_USERS.values())[0]
+        raise credentials_exception
 
     # ── DEV BYPASS: return in-memory user, skip MongoDB entirely ──────────────
     if settings.dev_bypass:
+        from app.bypass import bypass_get_user
         user = bypass_get_user(student_id)
-        return user if user else list(BYPASS_USERS.values())[0]
+        if user is None:
+            raise credentials_exception
+        return user
     # ─────────────────────────────────────────────────────────────────────────
 
     from app.database import get_db
@@ -60,7 +62,7 @@ async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)):
     db = get_db()
     user = await db.users.find_one({"student_id": token_data.student_id})
     if user is None:
-        return list(BYPASS_USERS.values())[0]
+        raise credentials_exception
     user["_id"] = str(user["_id"])
     return user
 
@@ -72,5 +74,9 @@ async def get_current_active_user(current_user: dict = Depends(get_current_user)
 
 
 async def require_admin(current_user: dict = Depends(get_current_active_user)):
-    # Authentication removed — always pass through as admin in bypass/no-auth mode
+    if current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
     return current_user

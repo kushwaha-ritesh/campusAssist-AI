@@ -11,10 +11,10 @@ export interface RegisterPayload {
 
 export const authApi = {
   login: async (payload: LoginPayload) => {
-    const form = new FormData();
+    const form = new URLSearchParams();
     form.append('username', payload.username);
     form.append('password', payload.password);
-    const res = await api.post('/auth/login', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    const res = await api.post('/auth/login', form, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
     return res.data as { access_token: string; token_type: string; user: User };
   },
   register: (payload: RegisterPayload) => api.post('/auth/register', payload).then(r => r.data as User),

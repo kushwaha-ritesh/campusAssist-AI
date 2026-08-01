@@ -139,7 +139,7 @@ campusassist/
 | Environment | URL |
 |---|---|
 | Local | `http://localhost:8000` |
-| Production | `https://<your-render-service>.onrender.com` |
+| Production | `https://https://campusassist-ai-lml1.onrender.com` |
 | Interactive docs (Swagger) | `<base-url>/docs` |
 | ReDoc | `<base-url>/redoc` |
 
@@ -438,12 +438,12 @@ All variables are read by `backend/app/config.py` via `pydantic-settings`. Copy 
 
 | Variable | Default | Required in Prod | Description |
 |---|---|---|---|
-| `MONGODB_URL` | `mongodb://localhost:27017` | ✅ | Full MongoDB Atlas connection string |
-| `DATABASE_NAME` | `campusassist` | Optional | MongoDB database name |
-| `SECRET_KEY` | `change-me-...` | ✅ | JWT signing secret — use a 64-char random string |
+| `MONGODB_URL` | `mongodb+srv://ask-dev` | ✅ | Full MongoDB Atlas connection string |
+| `DATABASE_NAME` | `myVirtualDatabase` | Optional | MongoDB database name |
+| `SECRET_KEY` | `ask-dev` | ✅ | JWT signing secret — use a 64-char random string |
 | `ALGORITHM` | `HS256` | Optional | JWT algorithm |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `60` | Optional | Token lifespan in minutes |
-| `ADMIN_REGISTRATION_CODE` | `ADMIN2024` | ✅ | Code required to register as admin |
+| `ADMIN_REGISTRATION_CODE` | `ask_dev` | ✅ | Code required to register as admin |
 | `DEV_BYPASS` | `false` | ✅ must be `false` | Enables in-memory dev accounts — **never `true` in production** |
 
 **Generate a secure `SECRET_KEY`:**
@@ -501,7 +501,7 @@ docker-compose up --build      # Frontend: http://localhost:3000
 
 **Required environment variables on Render:**
 ```
-MONGODB_URL              = mongodb+srv://<user>:<pass>@cluster.mongodb.net/campusassist
+MONGODB_URL              = mongodb+srv://<user>:<pass>@cluster.mongodb.net/myVirtualDatabase
 DATABASE_NAME            = campusassist
 SECRET_KEY               = <64-char random hex string>
 ALGORITHM                = HS256
@@ -521,7 +521,7 @@ DEV_BYPASS               = false
 
 **Required environment variable on Vercel:**
 ```
-VITE_API_BASE_URL = https://<your-render-service>.onrender.com
+VITE_API_BASE_URL = https://campusassist-ai-lml1.onrender.com/
 ```
 
 ### ⚠️ CORS — Required Before Deploying
@@ -534,7 +534,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:3000",
-        "https://your-app.vercel.app",   # ← add this
+        "https://.vercel.app",   # ← add this
     ],
     ...
 )

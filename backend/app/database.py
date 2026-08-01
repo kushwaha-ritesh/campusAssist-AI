@@ -1,4 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import HTTPException, status
 from app.config import get_settings
 
 settings = get_settings()
@@ -26,4 +27,9 @@ async def close_db():
 
 
 def get_db():
+    if client is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database is not connected. Check MONGODB_URL in backend/.env and ensure MongoDB is reachable.",
+        )
     return client[settings.database_name]

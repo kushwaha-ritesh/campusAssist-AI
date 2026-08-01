@@ -14,26 +14,43 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const isAdmin = tab === 'admin';
+
+  const errorFor = (status: number | undefined, serverDetail: string): string => {
+    if (status === 401 || status === 400) {
+      return isAdmin
+        ? 'Invalid Admin ID or password. Please check your credentials.'
+        : 'Invalid Student ID, email, or password. Please check your credentials.';
+    }
+    if (status === 503) return 'Service unavailable. Please try again later.';
+    return serverDetail || 'Login failed. Please try again.';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!form.student_id || !form.password) { setError('Please fill all fields.'); return; }
+    if (!form.student_id || !form.password) {
+      setError(isAdmin ? 'Please enter your Admin ID and password.' : 'Please enter your Student ID (or email) and password.');
+      return;
+    }
     setLoading(true);
     try {
       const data = await authApi.login({ username: form.student_id, password: form.password });
-      if (tab === 'admin' && data.user.role !== 'admin') {
-        setError('This account does not have admin privileges.');
+      if (isAdmin && data.user.role !== 'admin') {
+        setError('This account does not have admin privileges. Please use the Student login tab.');
         return;
       }
-      if (tab === 'student' && data.user.role !== 'student') {
-        setError('Please use the Admin login tab.');
+      if (!isAdmin && data.user.role !== 'student') {
+        setError('This is an admin account. Please use the Admin login tab.');
         return;
       }
       setAuth(data.user, data.access_token);
       toast.success(`Welcome back, ${data.user.full_name}!`);
       navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail ?? 'Login failed. Please try again.');
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail ?? '';
+      setError(errorFor(status, detail));
     } finally {
       setLoading(false);
     }
@@ -49,22 +66,23 @@ export default function LoginPage() {
         </div>
         <div className="auth-body">
           <div className="auth-toggle">
-            <button className={`auth-toggle-btn ${tab === 'student' ? 'active' : ''}`} onClick={() => setTab('student')}>
+            <button className={`auth-toggle-btn ${tab === 'student' ? 'active' : ''}`} onClick={() => { setTab('student'); setError(''); }}>
               Student
             </button>
-            <button className={`auth-toggle-btn ${tab === 'admin' ? 'active' : ''}`} onClick={() => setTab('admin')}>
+            <button className={`auth-toggle-btn ${tab === 'admin' ? 'active' : ''}`} onClick={() => { setTab('admin'); setError(''); }}>
               Admin
             </button>
           </div>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label className="form-label">{tab === 'admin' ? 'Admin ID' : 'Student ID'}</label>
+              <label className="form-label">{tab === 'admin' ? 'Admin ID' : 'Student ID or Email'}</label>
               <input
                 className="form-input"
                 type="text"
-                placeholder={tab === 'admin' ? 'e.g. ADMIN001' : 'e.g. STU2024001'}
+                placeholder={tab === 'admin' ? 'e.g. ADMIN001' : 'e.g. STU2024001 or email'}
                 value={form.student_id}
                 onChange={e => setForm(f => ({ ...f, student_id: e.target.value }))}
+                autoComplete="username"
                 autoFocus
               />
             </div>
@@ -77,6 +95,7 @@ export default function LoginPage() {
                   placeholder="Enter your password"
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  autoComplete="current-password"
                   style={{ paddingRight: '2.5rem' }}
                 />
                 <button
