@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.database import connect_db, close_db
-from app.routers import auth, requests, appointments, notifications, ai_chat, admin, campus_info
+from app.routers import auth, requests, appointments, notifications, ai_chat, admin, campus_info, campus_admin
 from app.config import get_settings
 
 settings = get_settings()
@@ -13,6 +13,9 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     try:
         await connect_db()
+        # Seed offices and documents into MongoDB if collections are empty
+        from app.routers.campus_info import seed_campus_data
+        await seed_campus_data()
         # Seed knowledge base with static office/document data (idempotent)
         if settings.gemini_api_key:
             from app.knowledge import seed_static_data
@@ -54,6 +57,7 @@ app.include_router(notifications.router)
 app.include_router(ai_chat.router)
 app.include_router(admin.router)
 app.include_router(campus_info.router)
+app.include_router(campus_admin.router)
 
 
 @app.get("/")

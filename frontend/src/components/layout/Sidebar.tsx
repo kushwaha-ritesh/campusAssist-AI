@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Bot, MapPin, FileText, MessageSquarePlus,
   Activity, CalendarPlus, Bell, LogOut, Users, ClipboardList,
-  CalendarCheck, Megaphone, GraduationCap,
+  CalendarCheck, Megaphone, GraduationCap, Building2,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
@@ -27,6 +27,7 @@ const ADMIN_NAV = [
   { label: 'Appointments', icon: CalendarCheck, path: '/admin/appointments' },
   { label: 'Students', icon: Users, path: '/admin/students' },
   { label: 'Notifications', icon: Megaphone, path: '/admin/notifications' },
+  { label: 'Campus Info', icon: Building2, path: '/admin/campus-info' },
 ];
 
 export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {

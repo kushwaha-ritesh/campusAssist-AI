@@ -21,6 +21,7 @@ import AdminRequestsPage from './pages/admin/AdminRequestsPage';
 import AdminStudentsPage from './pages/admin/AdminStudentsPage';
 import AdminAppointmentsPage from './pages/admin/AdminAppointmentsPage';
 import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
+import AdminCampusInfoPage from './pages/admin/AdminCampusInfoPage';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="students" element={<AdminStudentsPage />} />
           <Route path="appointments" element={<AdminAppointmentsPage />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
+          <Route path="campus-info" element={<AdminCampusInfoPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

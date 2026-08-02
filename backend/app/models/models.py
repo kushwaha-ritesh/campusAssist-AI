@@ -144,6 +144,36 @@ class NotificationInDB(NotificationCreate):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+# ─── Campus Info Models ─────────────────────────────────────────────────────────
+
+class OfficeCreate(BaseModel):
+    id: str                       # slug, e.g. "admissions"
+    name: str
+    block: str
+    room: str
+    phone: str
+    email: str
+    hours: str
+    services: list[str] = []
+
+class OfficeUpdate(BaseModel):
+    name: Optional[str] = None
+    block: Optional[str] = None
+    room: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    hours: Optional[str] = None
+    services: Optional[list[str]] = None
+
+class DocumentCategoryCreate(BaseModel):
+    category: str
+    documents: list[str] = []
+
+class DocumentCategoryUpdate(BaseModel):
+    category: Optional[str] = None
+    documents: Optional[list[str]] = None
+
+
 # ─── AI Chat Models (stub for future integration) ───────────────────────────────
 
 class ChatMessage(BaseModel):

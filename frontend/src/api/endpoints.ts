@@ -139,3 +139,18 @@ export const adminApi = {
   students: () => api.get('/admin/students').then(r => r.data as User[]),
   toggleActive: (student_id: string) => api.patch(`/admin/students/${student_id}/toggle-active`).then(r => r.data),
 };
+
+// ─── Admin Campus Info ─────────────────────────────────────────────────────
+
+export const campusAdminApi = {
+  // Offices
+  listOffices:   ()                          => api.get('/admin/campus/offices').then(r => r.data as Office[]),
+  createOffice:  (data: Partial<Office>)     => api.post('/admin/campus/offices', data).then(r => r.data as Office),
+  updateOffice:  (id: string, data: Partial<Office>) => api.put(`/admin/campus/offices/${id}`, data).then(r => r.data as Office),
+  deleteOffice:  (id: string)                => api.delete(`/admin/campus/offices/${id}`),
+  // Documents
+  listDocuments:    ()                                    => api.get('/admin/campus/documents').then(r => r.data as DocumentCategory[]),
+  createDocument:   (data: DocumentCategory)              => api.post('/admin/campus/documents', data).then(r => r.data as DocumentCategory),
+  updateDocument:   (cat: string, data: Partial<DocumentCategory>) => api.put(`/admin/campus/documents/${encodeURIComponent(cat)}`, data).then(r => r.data as DocumentCategory),
+  deleteDocument:   (cat: string)                         => api.delete(`/admin/campus/documents/${encodeURIComponent(cat)}`),
+};
