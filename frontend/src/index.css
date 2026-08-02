@@ -134,10 +134,13 @@ input, textarea, select {
   color: var(--ibm-white);
   padding: 0.375rem;
   border-radius: var(--radius);
-  display: none;
+  cursor: pointer;
+  display: none;                 /* hidden on desktop — sidebar is always visible */
 }
+/* On mobile: show hamburger, hide the topbar brand SVG+text (sidebar has its own logo) */
 @media (max-width: 768px) {
   .hamburger-btn { display: flex; align-items: center; }
+  .topbar-brand  { display: none; }
 }
 
 /* ─── Sidebar ───────────────────────────────────────────────────────────── */
