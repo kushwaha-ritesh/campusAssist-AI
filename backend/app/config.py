@@ -18,6 +18,14 @@ class Settings(BaseSettings):
     # Comma-separated allowed CORS origins
     # e.g. ALLOWED_ORIGINS=https://your-app.vercel.app,http://localhost:3000
     allowed_origins: str = "http://localhost:3000,http://localhost:5173"
+    # ── Gemini AI ─────────────────────────────────────────────────────────────
+    gemini_api_key: str = ""
+    gemini_model: str = "models/gemini-2.0-flash-lite"
+    gemini_embedding_model: str = "models/gemini-embedding-2"
+    # ── Web Crawler ───────────────────────────────────────────────────────────
+    # Base URL of your university website (leave empty to disable crawler)
+    university_base_url: str = ""
+    crawl_interval_hours: int = 6
 
     class Config:
         env_file = str(_ENV_FILE)

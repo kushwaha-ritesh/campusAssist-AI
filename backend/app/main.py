@@ -13,6 +13,14 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     try:
         await connect_db()
+        # Seed knowledge base with static office/document data (idempotent)
+        if settings.gemini_api_key:
+            from app.knowledge import seed_static_data
+            await seed_static_data()
+        # Start background web crawler if a university URL is configured
+        if settings.university_base_url:
+            from app.crawler import start_crawler
+            start_crawler()
     except Exception as e:
         print(f"[WARNING] Could not connect to MongoDB: {e}")
         print("[WARNING] Register/login will fail until MongoDB is reachable.")

@@ -586,6 +586,21 @@ tr:last-child td { border-bottom: none; }
   40% { transform: scale(1); }
 }
 
+/* Blinking cursor shown at end of a streaming assistant bubble */
+.chat-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: currentColor;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 0.9s step-start infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
 /* ─── Notifications ──────────────────────────────────────────────────────── */
 .notif-item {
   padding: 1rem 1.25rem;
