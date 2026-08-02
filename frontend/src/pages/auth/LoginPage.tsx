@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { GraduationCap, Eye, EyeOff } from 'lucide-react';
+import { GraduationCap, Eye, EyeOff, KeyRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authApi } from '../../api/endpoints';
 import { useAuthStore } from '../../store/authStore';
@@ -106,6 +106,15 @@ export default function LoginPage() {
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+            </div>
+            {/* Forgot password link */}
+            <div style={{ textAlign: 'right', marginBottom: '0.75rem', marginTop: '-0.25rem' }}>
+              <Link
+                to="/forgot-password"
+                style={{ fontSize: '0.8rem', color: 'var(--ibm-blue-60)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+              >
+                <KeyRound size={13} /> Forgot password?
+              </Link>
             </div>
             {error && <p className="form-error" style={{ marginBottom: '0.75rem' }}>{error}</p>}
             <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>

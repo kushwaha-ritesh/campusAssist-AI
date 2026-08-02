@@ -19,6 +19,12 @@ export const authApi = {
   },
   register: (payload: RegisterPayload) => api.post('/auth/register', payload).then(r => r.data as User),
   me: () => api.get('/auth/me').then(r => r.data as User),
+  sendOtp: (email: string, purpose: 'register' | 'reset_password', identifier?: string) =>
+    api.post('/auth/send-otp', { email, purpose, identifier }).then(r => r.data as { message: string; email: string; attempts_remaining: number }),
+  verifyOtp: (email: string, purpose: 'register' | 'reset_password', code: string) =>
+    api.post('/auth/verify-otp', { email, purpose, code }).then(r => r.data as { message: string }),
+  resetPassword: (email: string, new_password: string) =>
+    api.post('/auth/reset-password', { email, new_password }).then(r => r.data as { message: string }),
 };
 
 // ─── Requests ─────────────────────────────────────────────────────────────

@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     # Base URL of your university website (leave empty to disable crawler)
     university_base_url: str = ""
     crawl_interval_hours: int = 6
+    # ── Brevo Email ───────────────────────────────────────────────────────────
+    brevo_api_key: str = ""
+    brevo_sender_email: str = ""
+    brevo_sender_name: str = "CampusAssist AI"
 
     class Config:
         env_file = str(_ENV_FILE)

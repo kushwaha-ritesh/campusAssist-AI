@@ -6,6 +6,7 @@ import { useAuthStore } from './store/authStore';
 // Pages
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import DashboardPage from './pages/student/DashboardPage';
 import AskAIPage from './pages/student/AskAIPage';
 import FindOfficePage from './pages/student/FindOfficePage';
@@ -46,6 +47,9 @@ export default function App() {
         } />
         <Route path="/register" element={
           token ? <Navigate to={user?.role === 'admin' ? '/admin' : '/dashboard'} replace /> : <RegisterPage />
+        } />
+        <Route path="/forgot-password" element={
+          token ? <Navigate to={user?.role === 'admin' ? '/admin' : '/dashboard'} replace /> : <ForgotPasswordPage />
         } />
 
         {/* Student */}

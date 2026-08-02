@@ -144,6 +144,41 @@ class NotificationInDB(NotificationCreate):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+# ─── OTP / Password Reset Models ────────────────────────────────────────────────
+
+class OTPRequest(BaseModel):
+    email: Optional[str] = None
+    identifier: Optional[str] = None   # student/admin ID (for reset_password)
+    purpose: Literal["register", "reset_password"]
+
+class OTPVerifyRequest(BaseModel):
+    email: str
+    purpose: Literal["register", "reset_password"]
+    code: str
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def strong_password(cls, v: str) -> str:
+        errors = []
+        if len(v) < 8:
+            errors.append("at least 8 characters")
+        if not re.search(r"[A-Z]", v):
+            errors.append("one uppercase letter")
+        if not re.search(r"[a-z]", v):
+            errors.append("one lowercase letter")
+        if not re.search(r"[0-9]", v):
+            errors.append("one number")
+        if not re.search(r"[^A-Za-z0-9]", v):
+            errors.append("one special character")
+        if errors:
+            raise ValueError("Password must contain: " + ", ".join(errors))
+        return v
+
+
 # ─── Campus Info Models ─────────────────────────────────────────────────────────
 
 class OfficeCreate(BaseModel):
