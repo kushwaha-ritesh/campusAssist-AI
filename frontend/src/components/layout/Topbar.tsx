@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Bell } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,10 +12,8 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 
   return (
     <header className="topbar">
-      <button className="hamburger-btn" onClick={onMenuClick} aria-label="Toggle menu">
-        <Menu size={20} />
-      </button>
-      <div className="topbar-brand">
+      {/* On mobile the brand acts as the hamburger toggle; on desktop it is non-interactive */}
+      <button className="topbar-brand" onClick={onMenuClick} aria-label="Toggle menu">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect width="24" height="24" rx="4" fill="rgba(255,255,255,0.15)" />
           <path d="M6 7h12M6 12h8M6 17h10" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
@@ -26,7 +24,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
             Admin
           </span>
         )}
-      </div>
+      </button>
       <div className="topbar-spacer" />
       <button
         className="btn-icon"

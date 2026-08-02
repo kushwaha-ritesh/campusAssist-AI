@@ -111,6 +111,12 @@ input, textarea, select {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  /* reset <button> defaults */
+  background: none;
+  border: none;
+  color: var(--ibm-white);
+  padding: 0;
+  cursor: default;          /* desktop: not interactive */
 }
 .topbar-spacer { flex: 1; }
 .topbar-user {
@@ -128,19 +134,16 @@ input, textarea, select {
   color: var(--ibm-white);
   flex-shrink: 0;
 }
-.hamburger-btn {
-  background: none;
-  border: none;
-  color: var(--ibm-white);
-  padding: 0.375rem;
-  border-radius: var(--radius);
-  cursor: pointer;
-  display: none;                 /* hidden on desktop — sidebar is always visible */
-}
-/* On mobile: show hamburger, hide the topbar brand SVG+text (sidebar has its own logo) */
+/* On mobile the brand button becomes the sidebar toggle */
 @media (max-width: 768px) {
-  .hamburger-btn { display: flex; align-items: center; }
-  .topbar-brand  { display: none; }
+  .topbar-brand {
+    cursor: pointer;
+    padding: 0.25rem 0.375rem;
+    border-radius: var(--radius);
+  }
+  .topbar-brand:hover {
+    background: rgba(255,255,255,0.12);
+  }
 }
 
 /* ─── Sidebar ───────────────────────────────────────────────────────────── */
