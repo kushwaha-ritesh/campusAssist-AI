@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordRequestForm
 from app.models.models import (
     UserCreate, UserResponse, Token,
-    OTPRequest, OTPVerifyRequest, ResetPasswordRequest,
+    OTPRequest, OTPVerifyRequest, ResetPasswordRequest, LoginRequest,
 )
 from app.auth import hash_password, verify_password, create_access_token, get_current_active_user
 from app.config import get_settings
+from app.turnstile import verify_turnstile
 from datetime import timedelta, datetime
 import random
 import string
@@ -30,6 +30,8 @@ async def _generate_id(db, prefix: str) -> str:
 async def send_otp_endpoint(payload: OTPRequest):
     from app.database import get_db
     from app.otp import send_otp, remaining_sends
+
+    await verify_turnstile(payload.turnstile_token)
 
     db = get_db()
 
@@ -191,7 +193,9 @@ async def register(user: UserCreate):
 # ── Login ─────────────────────────────────────────────────────────────────────
 
 @router.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(form_data: LoginRequest):
+    await verify_turnstile(form_data.turnstile_token)
+
     if settings.dev_bypass:
         from app.bypass import bypass_login
         user = bypass_login(form_data.username, form_data.password)

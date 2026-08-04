@@ -10,6 +10,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.5.4",
     "axios": "^1.7.2",
     "lucide-react": "^0.396.0",
     "react": "^18.3.1",

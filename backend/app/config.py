@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     brevo_api_key: str = ""
     brevo_sender_email: str = ""
     brevo_sender_name: str = "CampusAssist AI"
+    # ── Cloudflare Turnstile ──────────────────────────────────────────────────
+    cloudflare_turnstile_secret_key: str = ""
 
     class Config:
         env_file = str(_ENV_FILE)

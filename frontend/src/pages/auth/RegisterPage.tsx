@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, Check, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Turnstile } from '@marsidev/react-turnstile';
+import type { TurnstileInstance } from '@marsidev/react-turnstile';
 import { authApi } from '../../api/endpoints';
+
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string;
 
 const DEPARTMENTS = [
   'Computer Science', 'Engineering', 'Business Administration',
@@ -44,8 +48,10 @@ export default function RegisterPage() {
   const [attemptsLeft, setAttemptsLeft]     = useState(3);
   const [expiresSec, setExpiresSec]         = useState(OTP_EXPIRE_SECONDS);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const expireTimer  = useRef<ReturnType<typeof setInterval> | null>(null);
-  const resendTimer  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const expireTimer    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const resendTimer    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef   = useRef<TurnstileInstance>(null);
 
   // ── Result ──────────────────────────────────────────────────────────────────
   const [assignedId, setAssignedId] = useState<string | null>(null);
@@ -92,7 +98,7 @@ export default function RegisterPage() {
     if (!form.full_name.trim())            { setError('Full name is required.'); return; }
     setLoading(true);
     try {
-      const res = await authApi.sendOtp(form.email, 'register');
+      const res = await authApi.sendOtp(form.email, 'register', undefined, turnstileToken);
       setOtpEmail(res.email);
       setAttemptsLeft(res.attempts_remaining);
       setStep('otp');
@@ -101,6 +107,8 @@ export default function RegisterPage() {
       startResendCooldown();
     } catch (err: any) {
       setError(err.response?.data?.detail ?? 'Failed to send OTP. Please try again.');
+      turnstileRef.current?.reset();
+      setTurnstileToken('');
     } finally {
       setLoading(false);
     }
@@ -330,8 +338,19 @@ export default function RegisterPage() {
               <input className="form-input" type="password" placeholder="Repeat password"
                 value={form.confirm} onChange={e => setField('confirm', e.target.value)} autoComplete="new-password" required />
             </div>
+            {TURNSTILE_SITE_KEY && (
+              <div style={{ marginBottom: '0.75rem' }}>
+                <Turnstile
+                  ref={turnstileRef}
+                  siteKey={TURNSTILE_SITE_KEY}
+                  onSuccess={setTurnstileToken}
+                  onError={() => setTurnstileToken('')}
+                  onExpire={() => setTurnstileToken('')}
+                />
+              </div>
+            )}
             {error && <p className="form-error" style={{ marginBottom: '0.75rem' }}>{error}</p>}
-            <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
+            <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading || (!!TURNSTILE_SITE_KEY && !turnstileToken)}>
               {loading ? <span className="spinner" /> : 'Send Verification Code'}
             </button>
           </form>

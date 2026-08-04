@@ -150,6 +150,13 @@ class OTPRequest(BaseModel):
     email: Optional[str] = None
     identifier: Optional[str] = None   # student/admin ID (for reset_password)
     purpose: Literal["register", "reset_password"]
+    turnstile_token: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+    turnstile_token: Optional[str] = None
 
 class OTPVerifyRequest(BaseModel):
     email: str

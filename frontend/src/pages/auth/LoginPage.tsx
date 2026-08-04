@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, Eye, EyeOff, KeyRound } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Turnstile } from '@marsidev/react-turnstile';
+import type { TurnstileInstance } from '@marsidev/react-turnstile';
 import { authApi } from '../../api/endpoints';
 import { useAuthStore } from '../../store/authStore';
+
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string;
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -13,6 +17,8 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef<TurnstileInstance>(null);
 
   const isAdmin = tab === 'admin';
 
@@ -35,7 +41,7 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const data = await authApi.login({ username: form.student_id, password: form.password });
+      const data = await authApi.login({ username: form.student_id, password: form.password, turnstile_token: turnstileToken });
       if (isAdmin && data.user.role !== 'admin') {
         setError('This account does not have admin privileges. Please use the Student login tab.');
         return;
@@ -51,6 +57,8 @@ export default function LoginPage() {
       const status = err.response?.status;
       const detail = err.response?.data?.detail ?? '';
       setError(errorFor(status, detail));
+      turnstileRef.current?.reset();
+      setTurnstileToken('');
     } finally {
       setLoading(false);
     }
@@ -116,8 +124,19 @@ export default function LoginPage() {
                 <KeyRound size={13} /> Forgot password?
               </Link>
             </div>
+            {TURNSTILE_SITE_KEY && (
+              <div style={{ marginBottom: '0.75rem' }}>
+                <Turnstile
+                  ref={turnstileRef}
+                  siteKey={TURNSTILE_SITE_KEY}
+                  onSuccess={setTurnstileToken}
+                  onError={() => setTurnstileToken('')}
+                  onExpire={() => setTurnstileToken('')}
+                />
+              </div>
+            )}
             {error && <p className="form-error" style={{ marginBottom: '0.75rem' }}>{error}</p>}
-            <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
+            <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading || (!!TURNSTILE_SITE_KEY && !turnstileToken)}>
               {loading ? <span className="spinner" /> : `Sign in as ${tab === 'admin' ? 'Admin' : 'Student'}`}
             </button>
           </form>

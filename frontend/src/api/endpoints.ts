@@ -10,17 +10,18 @@ export interface RegisterPayload {
 }
 
 export const authApi = {
-  login: async (payload: LoginPayload) => {
-    const form = new URLSearchParams();
-    form.append('username', payload.username);
-    form.append('password', payload.password);
-    const res = await api.post('/auth/login', form, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+  login: async (payload: LoginPayload & { turnstile_token?: string }) => {
+    const res = await api.post('/auth/login', {
+      username: payload.username,
+      password: payload.password,
+      turnstile_token: payload.turnstile_token,
+    });
     return res.data as { access_token: string; token_type: string; user: User };
   },
   register: (payload: RegisterPayload) => api.post('/auth/register', payload).then(r => r.data as User),
   me: () => api.get('/auth/me').then(r => r.data as User),
-  sendOtp: (email: string, purpose: 'register' | 'reset_password', identifier?: string) =>
-    api.post('/auth/send-otp', { email, purpose, identifier }).then(r => r.data as { message: string; email: string; attempts_remaining: number }),
+  sendOtp: (email: string, purpose: 'register' | 'reset_password', identifier?: string, turnstile_token?: string) =>
+    api.post('/auth/send-otp', { email, purpose, identifier, turnstile_token }).then(r => r.data as { message: string; email: string; attempts_remaining: number }),
   verifyOtp: (email: string, purpose: 'register' | 'reset_password', code: string) =>
     api.post('/auth/verify-otp', { email, purpose, code }).then(r => r.data as { message: string }),
   resetPassword: (email: string, new_password: string) =>
